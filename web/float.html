@@ -113,9 +113,9 @@ body{
 /* ===== 数据与引擎：与网页版完全同源同口径 ===== */
 const LS_V2='wb_income_timer_v2';
 const SYNC_URL='sync';
-/* 数据隔离密钥：与网页版保持一致（填同一段随机串）；留空则不隔离 */
-const SYNC_KEY='';
-function syncUrl(){return SYNC_URL+(SYNC_KEY?'?key='+SYNC_KEY:'');}
+/* 同步密钥：由悬浮球「设置服务器与密钥」弹窗注入到本页 localStorage，与网页版填同一个值 */
+let SYNC_KEY=(localStorage.getItem('wb_sync_key')||'').trim();
+function syncHeaders(){const h={};if(SYNC_KEY)h['X-Sync-Key']=SYNC_KEY;return h;}
 let data=null, running=true, lastDone=false, lastPct=-1, _lastRev='';
 
 function money(n,d){d=d===undefined?2:d;return (isFinite(n)?n:0).toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d});}
@@ -228,7 +228,7 @@ function loadLatest(){
 /* 从服务器同步：网页版保存时写入 /sync，这里每 3 秒拉取，rev 变化才更新 */
 function pollServer(){
   try{
-    fetch(syncUrl(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
+    fetch(SYNC_URL,{cache:'no-store',headers:syncHeaders()}).then(r=>r.json()).then(j=>{
       if(!j||!j.data||!j.data.config)return;
       if(_lastRev&&_lastRev===j.rev)return;
       _lastRev=j.rev||'';

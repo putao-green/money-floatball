@@ -45,7 +45,7 @@ cd app && ./build.sh   # 需要 Xcode Command Line Tools
 open 上班好搭子.app
 ```
 
-菜单栏 💰 → **设置服务器地址**，填入你的网页版地址（如 `http://your-domain.com/float.html`）。
+菜单栏 💰 → **设置服务器与密钥**，填入你的网页版地址（如 `http://your-domain.com/float.html`）与同步密钥（可留空，服务器配了 SYNC_KEY 才需要）。
 
 ### 3. 使用
 
@@ -58,17 +58,22 @@ open 上班好搭子.app
 多人共用同一份代码时，数据靠两层隔离：
 
 1. **域名天然隔离**：不同人部署到不同域名，数据存在各自的 localStorage 和各自的服务器，互不干扰。
-2. **key 隔离**：`web/index.html` 和 `web/float.html` 顶部各有一行 `SYNC_KEY` 配置。填一段随机串（如 `k7x9m2q...`）后，数据会存到服务端 `data_<key>.json`，不带 key 的人读不到也改不了你的数据；留空则存 `data.json`（兼容旧版）。
+2. **单密钥鉴权**：服务端只认一个密钥，密钥通过环境变量注入（不进代码、不进仓库）。请求必须带请求头 `X-Sync-Key`，不匹配直接 403。每个人部署时各自设自己的密钥，天然互相隔离。
 
-> 换 key 时注意：旧数据在 `data.json` 里，浏览器 localStorage 会作为权威数据自动推送到新 key 文件，一般无需手动迁移；也可以直接 `cp data.json data_<新key>.json`。
+### 部署时怎么配密钥
 
-> key 写在网页代码里，对普通访问者是有效的隔离/防篡改凭据；要彻底防住懂技术的人，请在 nginx 层叠加 Basic Auth（见下）。
+- **服务端**（systemd）：`moneysync.service` 里 `Environment=SYNC_KEY=你的32位随机串`（可运行 `openssl rand -hex 16` 生成），改完 `systemctl daemon-reload && systemctl restart moneysync`
+- **网页版**：打开「工资与数据」弹窗 → 数据同步 → 填同一个密钥（存 localStorage，不进代码）
+- **悬浮球**：菜单栏 💰 → 设置服务器与密钥 → 填同一个密钥
+
+> 密钥只在你自己的浏览器/悬浮球里，GitHub 代码里永远没有密钥值。密钥泄露等同于数据公开，请用 32 位以上随机串并保密。
+> 未配置 `SYNC_KEY` 环境变量时服务端不做鉴权（兼容旧版，仅建议内网使用）。
 
 ## 隐私说明
 
-- 所有数据默认只存你自己的浏览器（localStorage）和你的服务器（data.json / data_<key>.json），不上传任何第三方
-- 仓库不含任何真实用户数据；`data*.json` 已被 .gitignore 排除
-- 同步接口依赖 key 隔离，**如需更高安全性**，在 nginx 站点配置加 Basic Auth（`htpasswd` 生成密码文件，`auth_basic "Restricted"; auth_basic_user_file /etc/nginx/.htpasswd;`），网页与悬浮球访问都会要求密码
+- 所有数据默认只存你自己的浏览器（localStorage）和你的服务器（data.json），不上传任何第三方
+- 仓库不含任何真实用户数据；`data.json` 已被 .gitignore 排除
+- 同步接口用 `X-Sync-Key` 请求头鉴权；**如需更高安全性**（防懂技术的人抓包），请配置 HTTPS（nginx + 域名证书），并可在 nginx 层叠加 Basic Auth（`htpasswd` 生成密码文件，`auth_basic "Restricted"; auth_basic_user_file /etc/nginx/.htpasswd;`）
 
 ## 技术栈
 

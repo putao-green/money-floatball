@@ -509,21 +509,20 @@ function save(force){
 
 /* ===== 服务器同步：网页写，悬浮球读（同源 /sync） ===== */
 const SYNC_URL='sync';
-/* 数据隔离密钥：填一段随机串（如 k7x9m2q...），数据将存到服务端 data_<key>.json，防他人读写；
-   留空则不隔离（兼容旧版，数据存 data.json） */
-const SYNC_KEY='';
-function syncUrl(){return SYNC_URL+(SYNC_KEY?'?key='+SYNC_KEY:'');}
+/* 同步密钥：在「工资与数据」弹窗的「数据同步」里设置，只存 localStorage，代码中不出现密钥值 */
+let SYNC_KEY=(localStorage.getItem('wb_sync_key')||'').trim();
+function syncHeaders(){const h={};if(SYNC_KEY)h['X-Sync-Key']=SYNC_KEY;return h;}
 let _lastPush=0;
 function syncPush(){
   const t=Date.now();
   if(t-_lastPush<400)return;
   _lastPush=t;
-  try{fetch(syncUrl(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).catch(()=>{});}catch(e){}
+  try{fetch(SYNC_URL,{method:'POST',headers:Object.assign({'Content-Type':'application/json'},syncHeaders()),body:JSON.stringify(data)}).catch(()=>{});}catch(e){}
 }
 /* 本地无数据时从服务器恢复（换电脑/清缓存场景）；本地有数据则以本地为准 */
 function pullServer(){
   try{
-    fetch(syncUrl(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
+    fetch(SYNC_URL,{cache:'no-store',headers:syncHeaders()}).then(r=>r.json()).then(j=>{
       if(!j||!j.data||!j.data.config)return;
       data=normalize(j.data);persist();
       if(typeof renderAll==='function')renderAll();
@@ -912,6 +911,10 @@ function openSettings(){
 
     +'<div class="setting-sec-title">自动快照（最近 '+SNAP_LIMIT+' 份）</div><div id="snapBox">'+snaps+'</div>'
 
+    +'<div class="setting-sec-title">数据同步（网页 ↔ 悬浮球）</div>'
+    +'<div class="field"><label>同步密钥</label><input type="password" id="setSyncKey" value="'+esc(SYNC_KEY)+'" placeholder="留空则不启用同步鉴权"></div>'
+    +'<div class="muted-text">密钥只保存在你的浏览器。悬浮球菜单「设置服务器与密钥」填同一个值即可互通；服务器需配置 SYNC_KEY 环境变量才会校验，未配置则不校验（旧版兼容）。</div>'
+
     +'<div class="setting-sec-title">备份与清空</div>'
     +'<div class="backup"><button id="setExport">导出备份</button><button id="setImport">导入备份</button><button id="setClear">清空数据</button></div>'
     +'<div class="modal-actions"><button class="btn btn-pri btn-block" data-m="done">完成</button></div>';
@@ -954,7 +957,11 @@ function openSettings(){
   document.getElementById('setImport').addEventListener('click',()=>document.getElementById('importFile').click());
   document.getElementById('setClear').addEventListener('click',openClearDialog);
   modalBox.querySelector('[data-m=done]').addEventListener('click',()=>{
-    readForm();persist();closeModal();refreshAll();
+    readForm();
+    const sk=document.getElementById('setSyncKey').value.trim();
+    if(sk){localStorage.setItem('wb_sync_key',sk);}else{localStorage.removeItem('wb_sync_key');}
+    SYNC_KEY=sk;
+    persist();closeModal();refreshAll();
   });
 }
 

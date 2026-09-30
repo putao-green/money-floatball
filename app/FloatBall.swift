@@ -19,6 +19,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     var baseURL: String {
         D.string(forKey: "baseURL") ?? "http://YOUR-SERVER-ADDRESS/float.html"
     }
+    var syncKey: String {
+        D.string(forKey: "syncKey") ?? ""
+    }
 
     // 持久化
     let D = UserDefaults.standard
@@ -84,6 +87,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
         }
         let ts = Int(Date().timeIntervalSince1970 * 1000)
         let url = URL(string: baseURL + "?_ts=" + String(ts))!
+        // 注入同步密钥到页面 localStorage（同源），float.html 读取后随 /sync 请求带上 X-Sync-Key
+        let esc = syncKey.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'")
+        let js = "try{localStorage.setItem('wb_sync_key','" + esc + "')}catch(e){}"
+        let us = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+        webView.configuration.userContentController.removeAllUserScripts()
+        webView.configuration.userContentController.addUserScript(us)
         webView.load(URLRequest(url: url))
     }
 
@@ -177,7 +186,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
         let pin = NSMenuItem(title: "", action: #selector(togglePin), keyEquivalent: "")
         pin.target = self
         m.addItem(pin)
-        let set = NSMenuItem(title: "设置服务器地址", action: #selector(setServer), keyEquivalent: "")
+        let set = NSMenuItem(title: "设置服务器与密钥", action: #selector(setServer), keyEquivalent: "")
         set.target = self
         m.addItem(set)
         m.addItem(NSMenuItem(title: "重新加载", action: #selector(reload), keyEquivalent: "r"))
@@ -191,17 +200,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
 
     @objc func setServer() {
         let alert = NSAlert()
-        alert.messageText = "设置服务器地址"
-        alert.informativeText = "请输入网页版部署地址，例如：http://your-server.com/float.html"
-        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 320, height: 24))
-        field.stringValue = baseURL
-        alert.accessoryView = field
+        alert.messageText = "设置服务器与密钥"
+        alert.informativeText = "服务器地址：网页版部署地址，例如 http://your-server.com/float.html\n同步密钥：与网页「工资与数据」弹窗里填的同步密钥一致（服务器配了 SYNC_KEY 才需要）"
+        let box = NSView(frame: NSRect(x: 0, y: 0, width: 340, height: 64))
+        let f1 = NSTextField(frame: NSRect(x: 0, y: 38, width: 340, height: 24))
+        f1.stringValue = baseURL
+        let f2 = NSTextField(frame: NSRect(x: 0, y: 8, width: 340, height: 24))
+        f2.stringValue = syncKey
+        f2.placeholderString = "同步密钥（可留空）"
+        box.addSubview(f1)
+        box.addSubview(f2)
+        alert.accessoryView = box
         alert.addButton(withTitle: "保存并加载")
         alert.addButton(withTitle: "取消")
         if alert.runModal() == .alertFirstButtonReturn {
-            let v = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            let v = f1.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            let k = f2.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
             if !v.isEmpty {
                 D.set(v, forKey: "baseURL")
+                D.set(k, forKey: "syncKey")
                 loadPage()
             }
         }

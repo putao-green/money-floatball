@@ -1,11 +1,13 @@
 # systemd 服务示例：安装到 /etc/systemd/system/moneysync.service
 # ExecStart 里的路径按实际部署位置修改
+# 关键：Environment=SYNC_KEY 填你的随机密钥（32位以上），网页/悬浮球设置里填同一个值
 [Unit]
 Description=money sync
 After=network.target
 
 [Service]
 ExecStart=/usr/bin/python3 /var/www/money-floatball/server/sync.py
+Environment=SYNC_KEY=replace-with-your-32-char-random-key
 Restart=always
 
 [Install]
