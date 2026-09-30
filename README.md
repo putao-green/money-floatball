@@ -19,6 +19,10 @@
 
 ![网页版](screenshots/web.jpg)
 
+「工资与数据」设置弹窗，月薪、时间、午休、计薪天数都在这里改，改完实时重算每秒收益。
+
+![工资与数据设置](screenshots/settings.jpg)
+
 ## 快速开始
 
 ### 1. 部署网页版与同步服务（Linux + nginx）
@@ -68,6 +72,10 @@ xattr -d com.apple.quarantine 上班好搭子.app
 | 换服务器 / 密钥 | 菜单栏 💰 → 设置服务器与密钥 |
 
 ![悬停展开目标](screenshots/float-expanded.jpg)
+
+放大后的悬浮球，拖右下角可以任意缩放大小：
+
+![放大后的悬浮球](screenshots/float-large.jpg)
 
 ## 数据隔离（重要）
 
