@@ -509,17 +509,21 @@ function save(force){
 
 /* ===== 服务器同步：网页写，悬浮球读（同源 /sync） ===== */
 const SYNC_URL='sync';
+/* 数据隔离密钥：填一段随机串（如 k7x9m2q...），数据将存到服务端 data_<key>.json，防他人读写；
+   留空则不隔离（兼容旧版，数据存 data.json） */
+const SYNC_KEY='';
+function syncUrl(){return SYNC_URL+(SYNC_KEY?'?key='+SYNC_KEY:'');}
 let _lastPush=0;
 function syncPush(){
   const t=Date.now();
   if(t-_lastPush<400)return;
   _lastPush=t;
-  try{fetch(SYNC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).catch(()=>{});}catch(e){}
+  try{fetch(syncUrl(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).catch(()=>{});}catch(e){}
 }
 /* 本地无数据时从服务器恢复（换电脑/清缓存场景）；本地有数据则以本地为准 */
 function pullServer(){
   try{
-    fetch(SYNC_URL,{cache:'no-store'}).then(r=>r.json()).then(j=>{
+    fetch(syncUrl(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
       if(!j||!j.data||!j.data.config)return;
       data=normalize(j.data);persist();
       if(typeof renderAll==='function')renderAll();

@@ -7,7 +7,7 @@ echo "编译中..."
 swiftc -parse-as-library -swift-version 5 -O -framework Cocoa -framework WebKit FloatBall.swift -o FloatBall
 
 echo "打包 .app..."
-APP="上班聚宝盆悬浮球.app"
+APP="上班好搭子.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS"
 cp FloatBall "$APP/Contents/MacOS/"

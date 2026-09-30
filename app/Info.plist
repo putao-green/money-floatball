@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>上班聚宝盆悬浮球</string>
+	<string>上班好搭子</string>
 	<key>CFBundleExecutable</key>
 	<string>FloatBall</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.example.money-floatball</string>
 	<key>CFBundleName</key>
-	<string>上班聚宝盆悬浮球</string>
+	<string>上班好搭子</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
