@@ -214,9 +214,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
         alert.addButton(withTitle: "保存并加载")
         alert.addButton(withTitle: "取消")
         if alert.runModal() == .alertFirstButtonReturn {
-            let v = f1.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            var v = f1.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
             let k = f2.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
             if !v.isEmpty {
+                // 自动补全悬浮球页面路径：填根域名或 / 结尾时补 /float.html
+                if !v.contains("float.html") {
+                    if v.hasSuffix("/") { v += "float.html" } else { v += "/float.html" }
+                }
                 D.set(v, forKey: "baseURL")
                 D.set(k, forKey: "syncKey")
                 loadPage()
