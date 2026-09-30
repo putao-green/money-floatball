@@ -1,0 +1,6 @@
+.DS_Store
+data.json
+*.app
+_shots/
+build/
+FloatBall

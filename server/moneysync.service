@@ -1,0 +1,12 @@
+# systemd 服务示例：安装到 /etc/systemd/system/moneysync.service
+# ExecStart 里的路径按实际部署位置修改
+[Unit]
+Description=money sync
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /var/www/money-floatball/server/sync.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

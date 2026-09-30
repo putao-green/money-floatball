@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>上班聚宝盆 · 悬浮球</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23F6B900'/%3E%3Ctext x='16' y='23' font-size='19' font-weight='bold' text-anchor='middle' fill='%236B4400'%3E%C2%A5%3C/text%3E%3C/svg%3E">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#F6B900;--gold-light:#FFD34D;--gold-dark:#E89A00;--gold-deep:#B07600;
+  --pink:#F0687A;--pink-soft:#FFE4E8;
+  --text:#54372E;--text-light:#A98E80;--line:#F0E2D2;
+  --radius-card:22px;
+}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:transparent;color:var(--text);
+  display:flex;align-items:center;justify-content:center;padding:0;
+  overflow:hidden;
+  -webkit-user-select:none;user-select:none;cursor:default;
+}
+.float-card{
+  width:272px;background:transparent;border:none;box-shadow:none;
+  padding:14px 16px 12px;text-align:center;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;transform-origin:center center;
+}
+.float-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 18% 12%,rgba(246,185,0,.16) 0%,transparent 46%),
+             radial-gradient(circle at 88% 92%,rgba(240,104,122,.12) 0%,transparent 44%);
+}
+
+/* ===== 聚宝盆（与网页同款图形） ===== */
+.bowl-area{position:relative;height:96px;margin:0 0 2px;display:flex;align-items:flex-end;justify-content:center;z-index:1}
+.bowl{position:relative;width:104px;height:70px;
+  background:linear-gradient(180deg,#FFD34D 0%,#F6B900 58%,#E09200 100%);
+  border-radius:12px 12px 50% 50%/12px 12px 38% 38%;
+  box-shadow:0 8px 18px rgba(200,130,0,.3),inset 0 -6px 10px rgba(150,100,0,.16),inset 0 4px 7px rgba(255,255,255,.45);z-index:2}
+.bowl-rim{position:absolute;top:-6px;left:-6px;right:-6px;height:13px;background:linear-gradient(180deg,#FFE27A,#F6B900);
+  border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.12);z-index:3}
+.bowl-face{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;z-index:4}
+.bowl-eyes{display:flex;gap:18px;margin-bottom:4px}
+.bowl-eye{width:6px;height:7px;background:#54372E;border-radius:50%;position:relative}
+.bowl-eye::after{content:'';position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;top:1px;right:1px}
+.bowl-mouth{width:13px;height:6px;border:2px solid #54372E;border-top:none;border-radius:0 0 14px 14px}
+.bowl-blush{position:absolute;bottom:16px;width:11px;height:6px;background:rgba(240,104,122,.4);border-radius:50%;z-index:4}
+.bowl-blush.left{left:12px}.bowl-blush.right{right:12px}
+.falling-coin{position:absolute;width:14px;height:14px;background:radial-gradient(circle at 35% 35%,#FFE9A8,#F2B24E 55%,#C97F1E);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#8A5E10;
+  box-shadow:0 2px 6px rgba(0,0,0,.18);z-index:3;animation:coinFall var(--dur,.9s) ease-in forwards;pointer-events:none}
+@keyframes coinFall{0%{transform:translateY(0) rotate(0) scale(1);opacity:1}70%{opacity:1}
+  100%{transform:translateY(var(--dist,150px)) rotate(var(--rot,360deg)) scale(.5);opacity:0}}
+.sparkle{position:absolute;z-index:4;pointer-events:none;animation:sparklePop .6s ease-out forwards}
+@keyframes sparklePop{0%{transform:scale(0);opacity:1}50%{transform:scale(1.25);opacity:1}100%{transform:scale(.7);opacity:0}}
+
+/* ===== 数字（与网页同款渐变字） ===== */
+.counter-label{font-size:15px;color:var(--text-light);margin-top:3px}
+.counter{font-size:46px;font-weight:800;letter-spacing:-.5px;line-height:1.08;font-variant-numeric:tabular-nums;
+  background:linear-gradient(135deg,#E89A00,#F0687A);-webkit-background-clip:text;background-clip:text;color:transparent;
+  display:inline-block;transition:transform .12s ease;margin-top:2px}
+.counter.bump{transform:scale(1.03)}
+.counter .cur-sym{font-size:.55em;font-weight:700;vertical-align:.18em;margin-right:2px}
+.per-sec{font-size:15px;color:var(--gold-deep);font-weight:700;margin-top:7px}
+
+/* ===== 目标（与网页同款，默认折叠，点击箭头展开） ===== */
+.goal-block{margin-top:0;padding-top:0;border-top:none;z-index:1;max-height:0;opacity:0;overflow:hidden;
+  transition:max-height .3s ease,opacity .25s ease,margin-top .3s ease,padding-top .3s ease}
+.float-card.expanded .goal-block{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);max-height:280px;opacity:1}
+
+.goal-name{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.goal-bar{height:7px;background:var(--line);border-radius:5px;overflow:hidden;margin-top:7px}
+.goal-bar i{display:block;height:100%;width:0;border-radius:5px;background:linear-gradient(90deg,var(--gold),var(--pink));transition:width .5s ease}
+.goal-meta{font-size:13px;color:var(--text-light);margin-top:6px;line-height:1.5}
+.goal-meta b{color:var(--gold-deep);font-weight:800}
+.need-line{font-size:13.5px;color:var(--text);margin-top:7px;line-height:1.45}
+.need-line b{color:var(--pink);font-weight:800}
+.goal-empty{font-size:13px;color:var(--text-light);line-height:1.55;margin-top:9px;z-index:1}
+.hint{font-size:12px;color:var(--text-light);opacity:.85;margin-top:10px;z-index:1}
+.resize-handle{position:absolute;right:4px;bottom:4px;width:11px;height:11px;border-right:3px solid rgba(176,118,0,.5);border-bottom:3px solid rgba(176,118,0,.5);border-radius:0 0 4px 0;z-index:5;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="float-card">
+  <div class="bowl-area" id="bowlArea">
+    <div class="bowl">
+      <div class="bowl-rim"></div>
+      <div class="bowl-face">
+        <div class="bowl-eyes"><div class="bowl-eye"></div><div class="bowl-eye"></div></div>
+        <div class="bowl-mouth"></div>
+      </div>
+      <div class="bowl-blush left"></div>
+      <div class="bowl-blush right"></div>
+    </div>
+  </div>
+  <div class="counter-label">今日已赚</div>
+  <div class="counter"><span class="cur-sym">¥</span><span id="heroToday">0.00</span></div>
+  <div class="per-sec" id="heroPerSec">每秒 +¥0.0000</div>
+
+  <div class="goal-block">
+    <div class="goal-name" id="goalName">当前目标 —</div>
+    <div class="goal-bar" id="goalBarWrap"><i id="goalBar"></i></div>
+    <div class="goal-meta" id="goalMeta"></div>
+    <div class="need-line" id="heroNeed"></div>
+  </div>
+  <div class="goal-empty" id="goalEmpty" style="display:none">去「欲望清单」加一件，今天赚的钱就有处可去</div>
+  <div class="hint">拖动移动 · 拖右下角缩放 · 单击置顶</div>
+  <div class="resize-handle"></div>
+</div>
+
+<script>
+/* ===== 数据与引擎：与网页版完全同源同口径 ===== */
+const LS_V2='wb_income_timer_v2';
+const SYNC_URL='sync';
+let data=null, running=true, lastDone=false, lastPct=-1, _lastRev='';
+
+function money(n,d){d=d===undefined?2:d;return (isFinite(n)?n:0).toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function activeItem(){return data.items.find(i=>i.id===data.activeId)||null;}
+function toMin(h,m){return (h||0)*60+(m||0);}
+function lunchStartMin(){const c=data.config;return toMin(c.lunchStartH,c.lunchStartM);}
+function lunchEndMin(){const c=data.config;return toMin(c.lunchEndH,c.lunchEndM);}
+function lunchGapSec(){return Math.max(0,lunchEndMin()-lunchStartMin())*60;}
+function workSecondsPerDay(){
+  const c=data.config;
+  const span=Math.max(0,toMin(c.endH,c.endM)-toMin(c.startH,c.startM))*60;
+  return Math.max(0,span-lunchGapSec());
+}
+function perSecond(){
+  const c=data.config,wsd=workSecondsPerDay(),days=c.days>0?c.days:0;
+  return (c.salary&&days>0&&wsd>0)?c.salary/days/wsd:0;
+}
+function isWorkdayDay(d){const w=d.getDay();return w!==0&&w!==6;}
+function workStartMs(day){const c=data.config,d=new Date(day);d.setHours(c.startH||0,c.startM||0,0,0);return d.getTime();}
+function workEndMs(day){const c=data.config,d=new Date(day);d.setHours(c.endH||0,c.endM||0,0,0);return d.getTime();}
+function lunchStartMs(day){const c=data.config,d=new Date(day);d.setHours(c.lunchStartH||12,c.lunchStartM||0,0,0);return d.getTime();}
+function lunchEndMs(day){const c=data.config,d=new Date(day);d.setHours(c.lunchEndH||13,c.lunchEndM||0,0,0);return d.getTime();}
+function cutLunch(day,lo,hi){
+  const a=Math.max(lo,lunchStartMs(day)),b=Math.min(hi,lunchEndMs(day));
+  return b>a?(b-a)/1000:0;
+}
+function todayWorkSeconds(t){
+  const d0=new Date(t);d0.setHours(0,0,0,0);
+  if(!isWorkdayDay(d0))return 0;
+  const lo=workStartMs(t),hi=Math.min(t.getTime(),workEndMs(t));
+  if(!(hi>lo))return 0;
+  return Math.max(0,(hi-lo)/1000-cutLunch(d0,lo,hi));
+}
+function workSecondsBetween(aMs,bMs){
+  if(!(bMs>aMs))return 0;
+  const d0=new Date(aMs);d0.setHours(0,0,0,0);
+  const d1=new Date(bMs);d1.setHours(0,0,0,0);
+  let total=0;const cur=new Date(d0);
+  while(cur<=d1){
+    if(isWorkdayDay(cur)){
+      const lo=Math.max(workStartMs(cur),aMs),hi=Math.min(workEndMs(cur),bMs);
+      if(hi>lo)total+=Math.max(0,(hi-lo)/1000-cutLunch(cur,lo,hi));
+    }
+    cur.setDate(cur.getDate()+1);
+  }
+  return total;
+}
+function accruedSince(t){
+  const ps=perSecond();
+  return data.since?ps*workSecondsBetween(data.since,t.getTime()):0;
+}
+function savedOf(it){
+  if(!it)return 0;
+  const price=it.price||0;
+  if(it.achieved)return price;
+  const base=it.saved||0;
+  if(it.id!==data.activeId)return Math.min(price,base);
+  return Math.min(price,base+accruedSince(now()));
+}
+function dayKeyOf(d){return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();}
+function rollDay(it,t){const k=dayKeyOf(t);if(it.dayKey!==k){it.dayKey=k;it.todaySaved=0;}}
+function todaySavedOf(it,t){
+  if(!it)return 0;
+  rollDay(it,t);
+  let v=it.todaySaved||0;
+  if(it.id===data.activeId&&data.since&&running&&!it.achieved){
+    const ps=perSecond();
+    v+=ps*workSecondsBetween(Math.max(data.since,workStartMs(t)),t.getTime());
+  }
+  return Math.min(it.price||0,v);
+}
+function breakdown(totalSec){
+  const wsd=workSecondsPerDay();
+  if(wsd<=0)return{days:0,hours:0,minutes:0,seconds:0};
+  let d=Math.floor(totalSec/wsd),rem=totalSec-d*wsd;
+  let h=Math.floor(rem/3600);rem-=h*3600;
+  let m=Math.floor(rem/60);
+  return{days:d,hours:h,minutes:m,seconds:Math.floor(rem-m*60)};
+}
+function fmtNeed(b){
+  const p=[];
+  if(b.days>0)p.push(b.days+' 个工作日');
+  if(b.hours>0)p.push(b.hours+' 时');
+  if(b.minutes>0)p.push(b.minutes+' 分');
+  if(b.days===0&&b.hours===0&&b.minutes===0)p.push(b.seconds+' 秒');
+  return p.join(' ');
+}
+function now(){return new Date();}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+/* 窗口自适应：整个悬浮球随面板大小整体缩放 */
+function fit(){
+  const card=document.querySelector('.float-card');
+  if(!card)return;
+  const s=Math.max(0.55,Math.min(3,(window.innerWidth-8)/272));
+  card.style.transform='scale('+s+')';
+}
+window.addEventListener('resize',fit);
+fit();
+
+/* 只读加载：本地缓存秒开（数据由服务器轮询刷新，见 pollServer） */
+function loadLatest(){
+  try{
+    const raw=localStorage.getItem(LS_V2);
+    if(!raw)return false;
+    data=JSON.parse(raw);
+    if(!data||!data.config)return false;
+    return true;
+  }catch(e){return false;}
+}
+/* 从服务器同步：网页版保存时写入 /sync，这里每 3 秒拉取，rev 变化才更新 */
+function pollServer(){
+  try{
+    fetch(SYNC_URL,{cache:'no-store'}).then(r=>r.json()).then(j=>{
+      if(!j||!j.data||!j.data.config)return;
+      if(_lastRev&&_lastRev===j.rev)return;
+      _lastRev=j.rev||'';
+      data=j.data;
+      try{localStorage.setItem(LS_V2,JSON.stringify(data));}catch(e){}
+      render();
+    }).catch(()=>{});
+  }catch(e){}
+}
+
+/* ===== 渲染 ===== */
+function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
+function coinRain(area){
+  for(let i=0;i<14;i++){
+    const c=document.createElement('div');
+    c.className='falling-coin';c.textContent='¥';
+    c.style.left=(8+Math.random()*84)+'%';
+    c.style.setProperty('--dist',(110+Math.random()*70)+'px');
+    c.style.setProperty('--rot',(300+Math.random()*220)+'deg');
+    c.style.setProperty('--dur',(0.85+Math.random()*0.45)+'s');
+    area.appendChild(c);
+    c.addEventListener('animationend',()=>c.remove());
+  }
+}
+function render(){
+  if(!data||!data.config)return;
+  const t=now(),ps=perSecond();
+  const todayEl=document.getElementById('heroToday');
+  const todayVal=ps*todayWorkSeconds(t);
+  const prev=parseFloat(todayEl.textContent.replace(/,/g,''));
+  todayEl.textContent=money(todayVal,2);
+  if(Math.abs(todayVal-prev)>0.001)bump(todayEl);
+  document.getElementById('heroPerSec').textContent='每秒 +¥'+ps.toFixed(4);
+
+  const it=activeItem();
+  const nameEl=document.getElementById('goalName'),barEl=document.getElementById('goalBar'),
+        barWrap=document.getElementById('goalBarWrap'),metaEl=document.getElementById('goalMeta'),
+        needEl=document.getElementById('heroNeed'),emptyEl=document.getElementById('goalEmpty');
+  if(!it){
+    nameEl.style.display='none';barWrap.style.display='none';metaEl.style.display='none';
+    needEl.style.display='none';emptyEl.style.display='block';
+    return;
+  }
+  nameEl.style.display='';barWrap.style.display='';metaEl.style.display='';
+  needEl.style.display='';emptyEl.style.display='none';
+  const sv=savedOf(it),done=it.achieved||sv>=(it.price||0);
+  const pct=it.price>0?Math.min(100,sv/it.price*100):0;
+  nameEl.textContent=(done?'已攒够 · ':'当前目标 · ')+it.name;
+  metaEl.innerHTML='目标 ¥'+money(it.price,0)+' · 已攒 <b>¥'+money(sv,2)+'</b>';
+  barEl.style.width=pct.toFixed(1)+'%';
+  if(done){
+    needEl.innerHTML='已攒够 <b>¥'+money(it.price,0)+'</b>，去下单吧！';
+    if(!lastDone)coinRain(document.getElementById('bowlArea'));
+    lastDone=true;
+    return;
+  }
+  lastDone=false;
+  const remain=it.price-sv;
+  let h='还需 <b>¥'+money(remain,0)+'</b>';
+  if(ps>0)h+=' · 约 '+fmtNeed(breakdown(remain/ps));
+  needEl.innerHTML=h;
+  void metaEl.offsetWidth;
+  if(Math.abs(pct-lastPct)>0.05)lastPct=pct;
+}
+
+setInterval(render,1000);
+setInterval(pollServer,3000);
+loadLatest();render();pollServer();
+
+/* ===== 与网页版一致的持续金币滴落 + 闪光 ===== */
+let lastCoin=0;
+function sprinkle(){
+  const t=now().getTime();
+  if(!running||!data||!activeItem())return;
+  const it=activeItem();
+  if(it.achieved||perSecond()<=0||savedOf(it)>=(it.price||0))return;
+  if(t-lastCoin<720)return;
+  lastCoin=t;
+  const area=document.getElementById('bowlArea');if(!area)return;
+  const coin=document.createElement('div');
+  coin.className='falling-coin';
+  const landY=38+Math.random()*14,cx=area.clientWidth/2;
+  coin.style.left=(cx+(Math.random()*52-26)-7)+'px';
+  coin.style.top='-4px';
+  coin.style.setProperty('--dist',landY+'px');
+  coin.style.setProperty('--rot',(300+Math.random()*220)+'deg');
+  coin.style.setProperty('--dur',(0.85+Math.random()*0.45)+'s');
+  coin.textContent='¥';
+  area.appendChild(coin);
+  coin.addEventListener('animationend',()=>{
+    coin.remove();
+    const s=document.createElement('div');s.className='sparkle';
+    s.innerHTML='<svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" fill="#FFD34D"/></svg>';
+    s.style.left=(cx+(Math.random()*5-2.5)-6)+'px';
+    s.style.top=(landY-2)+'px';
+    area.appendChild(s);
+    s.addEventListener('animationend',()=>s.remove());
+  });
+}
+setInterval(sprinkle,300);
+
+
+</script>
+</body>
+</html>
